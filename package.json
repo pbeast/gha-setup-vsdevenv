@@ -2,7 +2,7 @@
   "name": "gha-setup-vsdevenv",
   "version": "2.2.0",
   "description": "Setup VS dev environment for GitHub Actions",
-  "main": "index.js",
+  "main": "dist/index.js",
   "author": "Sean Middleditch",
   "license": "CC0",
   "scripts": {
