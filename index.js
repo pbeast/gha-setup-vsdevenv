@@ -1,23 +1,23 @@
-const core = require('@actions/core')
-const process = require('process')
-const path = require('path')
-const spawn = require('child_process').spawnSync
+import { getInput, setOutput, exportVariable, setFailed } from '@actions/core'
+import { platform, exit, env } from 'process'
+import { win32 } from 'path'
+import { spawnSync as spawn } from 'child_process'
 
 try {
     // this job has nothing to do on non-Windows platforms
-    if (process.platform != 'win32') {
-        process.exit(0)
+    if (platform != 'win32') {
+        exit(0)
     }
 
-    const arch = core.getInput('arch') || 'amd64'
-    const hostArch = core.getInput('host_arch') || ''
-    const toolsetVersion = core.getInput('toolset_version') || ''
-    const winsdk = core.getInput('winsdk') || ''
-    const vswhere = core.getInput('vswhere') || 'vswhere.exe'
-    const components = core.getInput('components') || 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
+    const arch = getInput('arch') || 'amd64'
+    const hostArch = getInput('host_arch') || ''
+    const toolsetVersion = getInput('toolset_version') || ''
+    const winsdk = getInput('winsdk') || ''
+    const vswhere = getInput('vswhere') || 'vswhere.exe'
+    const components = getInput('components') || 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
 
-    const vsInstallerPath = path.win32.join(process.env['ProgramFiles(x86)'], 'Microsoft Visual Studio', 'Installer')
-    const vswherePath = path.win32.resolve(vsInstallerPath, vswhere)
+    const vsInstallerPath = win32.join(env['ProgramFiles(x86)'], 'Microsoft Visual Studio', 'Installer')
+    const vswherePath = win32.resolve(vsInstallerPath, vswhere)
 
     console.log(`vswhere: ${vswherePath}`)
 
@@ -42,9 +42,9 @@ try {
 
     const installPath = installPathList[installPathList.length - 1]
     console.log(`install: ${installPath}`)
-    core.setOutput('install_path', installPath)
+    setOutput('install_path', installPath)
 
-    const vsDevCmdPath = path.win32.join(installPath, 'Common7', 'Tools', 'vsdevcmd.bat')
+    const vsDevCmdPath = win32.join(installPath, 'Common7', 'Tools', 'vsdevcmd.bat')
     console.log(`vsdevcmd: ${vsDevCmdPath}`)
 
     const vsDevCmdArgs = [ vsDevCmdPath, `-arch=${arch}` ]
@@ -72,18 +72,18 @@ try {
         .filter(s => s.indexOf('=') != -1)
         .map(s => s.split('=', 2))
     const newEnvVars = completeEnv
-        .filter(([key, _]) => !process.env[key])
+        .filter(([key, _]) => !env[key])
     const newPath = completeEnv
                         .filter(([key, _]) => key == 'Path')
                         .map(([_, value]) => value)
                         .join(';');
 
     for (const [key, value] of newEnvVars) {
-        core.exportVariable(key, value)
+        exportVariable(key, value)
     }
-    core.exportVariable('Path', newPath);
+    exportVariable('Path', newPath);
 
     console.log('environment updated')
 } catch (error) {
-    core.setFailed(error.message);
+    setFailed(error.message);
 }
